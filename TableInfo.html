@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>C&lt;DBIx::Admin::TableInfo&gt; - A wrapper around DBI's table_info</title>
+<link rev="made" href="mailto:" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">Synopsis</a></li>
+	<li><a href="#description">Description</a></li>
+	<li><a href="#distributions">Distributions</a></li>
+	<li><a href="#constructor_and_initialization">Constructor and initialization</a></li>
+	<li><a href="#method:_columns($table_name,_$by_position)">Method: columns($table_name, $by_position)</a></li>
+	<li><a href="#method:_info()">Method: <code>info()</code></a></li>
+	<li><a href="#method:_tables()">Method: <code>tables()</code></a></li>
+	<li><a href="#example_code">Example code</a></li>
+	<li><a href="#related_modules">Related Modules</a></li>
+	<li><a href="#required_modules">Required Modules</a></li>
+	<li><a href="#changes">Changes</a></li>
+	<li><a href="#author">Author</a></li>
+	<li><a href="#copyright">Copyright</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p><code>DBIx::Admin::TableInfo</code> - A wrapper around DBI's <code>table_info()</code> and <code>column_info()</code></p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">Synopsis</a></h1>
+<pre>
+        use DBIx::Admin::TableInfo;</pre>
+<pre>
+        my($dbh) = DBI -&gt; connect
+        (
+            'DBI:mysql:mids:127.0.0.1', 'root', 'pass',
+            {
+                AutoCommit         =&gt; 1,
+                PrintError         =&gt; 0,
+                RaiseError         =&gt; 1,
+                ShowErrorStatement =&gt; 1,
+            }
+        );
+        my($admin) = DBIx::Admin::TableInfo -&gt; new(dbh =&gt; $dbh);
+        my($info)  = $admin -&gt; info();</pre>
+<pre>
+        for my $table_name (@{$admin -&gt; tables()})
+        {
+            print &quot;Table: $table_name\n&quot;;
+            print &quot;Table attributes\n&quot;;</pre>
+<pre>
+            for (sort keys %{$$info{$table_name}{'attributes'} })
+            {
+                print &quot;$_: $$info{$table_name}{'attributes'}{$_}\n&quot;;
+            }</pre>
+<pre>
+            print &quot;\n&quot;;</pre>
+<pre>
+            for my $column_name (@{$admin -&gt; columns($table_name)})
+            {
+                print &quot;Column: $column_name\n&quot;;
+                print &quot;Column attributes\n&quot;;</pre>
+<pre>
+                for (sort keys %{$$info{$table_name}{'columns'}{$column_name} })
+                {
+                    print &quot;$_: $$info{$table_name}{'columns'}{$column_name}{$_}\n&quot;;
+                }</pre>
+<pre>
+                print &quot;\n&quot;;
+            }</pre>
+<pre>
+            print &quot;\n&quot;;
+        }</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">Description</a></h1>
+<p><code>DBIx::Admin::TableInfo</code> is a pure Perl module.</p>
+<p>It is a wrapper around the DBI methods <code>table_info()</code> and column_info().</p>
+<p>
+</p>
+<hr />
+<h1><a name="distributions">Distributions</a></h1>
+<p>This module is available both as a Unix-style distro (*.tgz) and an
+ActiveState-style distro (*.ppd). The latter is shipped in a *.zip file.</p>
+<p>See <a href="http://savage.net.au/Perl-modules.html">http://savage.net.au/Perl-modules.html</a> for details.</p>
+<p>See <a href="http://savage.net.au/Perl-modules/html/installing-a-module.html">http://savage.net.au/Perl-modules/html/installing-a-module.html</a> for
+help on unpacking and installing each type of distro.</p>
+<p>
+</p>
+<hr />
+<h1><a name="constructor_and_initialization">Constructor and initialization</a></h1>
+<p><code>new(...)</code> returns a <code>DBIx::Admin::TableInfo</code> object.</p>
+<p>This is the class's contructor.</p>
+<p>Usage: DBIx::Admin::TableInfo -&gt; new().</p>
+<p>This method takes a set of parameters. Only the dbh parameter is mandatory.</p>
+<p>For each parameter you wish to use, call new as new(param_1 =&gt; value_1, ...).</p>
+<dl>
+<dt><strong><a name="item_column_catalog">column_catalog</a></strong><br />
+</dt>
+<dd>
+This is the value passed in as the catalog parameter to column_info(catalog, schema...).
+</dd>
+<dd>
+<p>The default value is undef.</p>
+</dd>
+<dd>
+<p>undef was chosen because it given the best results with MySQL. The MySQL driver DBD::mysql V 2.9002 has a bug in it,
+in that it aborts if an empty string is used here, even though an empty string is used for the catalog parameter to
+table_info().</p>
+</dd>
+<dd>
+<p>This parameter is optional.</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_column_schema">column_schema</a></strong><br />
+</dt>
+<dd>
+This is the value passed in as the schema parameter to column_info(catalog, schema...).
+</dd>
+<dd>
+<p>The default value is undef.</p>
+</dd>
+<dd>
+<p>See above for comments about undef.</p>
+</dd>
+<dd>
+<p>This parameter is optional.</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_dbh">dbh</a></strong><br />
+</dt>
+<dd>
+This is a database handle.
+</dd>
+<dd>
+<p>This parameter is mandatory.</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_table_catalog">table_catalog</a></strong><br />
+</dt>
+<dd>
+This is the value passed in as the catalog parameter to table_info(catalog, schema...).
+</dd>
+<dd>
+<p>The default value is '' (the empty string).</p>
+</dd>
+<dd>
+<p>See above for comments about empty strings.</p>
+</dd>
+<dd>
+<p>This parameter is optional.</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_table_schema">table_schema</a></strong><br />
+</dt>
+<dd>
+This is the value passed in as the schema parameter to table_info(catalog, schema...).
+</dd>
+<dd>
+<p>The default value is '' (the empty string).</p>
+</dd>
+<dd>
+<p>See above for comments about empty strings.</p>
+</dd>
+<dd>
+<p>This parameter is optional.</p>
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="method:_columns($table_name,_$by_position)">Method: columns($table_name, $by_position)</a></h1>
+<p>Returns an array ref of column names.</p>
+<p>By default they are sorted by name.</p>
+<p>However, if you pass in a true value for $by_position, they are sorted by the column attribute ORDINAL_POSITION.</p>
+<p>
+</p>
+<hr />
+<h1><a name="method:_info()">Method: <code>info()</code></a></h1>
+<p>Returns a hash ref of all available data.</p>
+<p>The structure of this hash is described next:</p>
+<dl>
+<dt><strong><a name="item_first_level%3a_the_keys_are_the_names_of_the_table">First level: The keys are the names of the tables</a></strong><br />
+</dt>
+<dd>
+<pre>
+        my($info)       = $obj -&gt; info();
+        my(@table_name) = sort keys %$info;</pre>
+</dd>
+<dd>
+<p>I use singular names for my arrays, hence @table_name rather than @table_names.</p>
+</dd>
+<dt><strong><a name="item_second_level%3a_the_keys_are_%27attributes%27_and_">Second level: The keys are 'attributes' and 'columns'</a></strong><br />
+</dt>
+<dd>
+<pre>
+        my($table_attributes) = $$info{$table_name}{'attributes'};</pre>
+</dd>
+<dd>
+<p>This is a hash ref of the table's attributes.</p>
+</dd>
+<dd>
+<pre>
+        my($columns) = $$info{$table_name}{'columns'};</pre>
+</dd>
+<dd>
+<p>This is a hash ref of the table's columns.</p>
+</dd>
+<dt><strong><a name="item_third_level%3a_table_attributes">Third level: Table attributes</a></strong><br />
+</dt>
+<dd>
+<pre>
+        while ( ($name, $value) = each(%$table_attributes) )
+        {
+                Use...
+        }</pre>
+</dd>
+<dd>
+<p>For the attributes of the tables, there are no more levels in the hash ref.</p>
+</dd>
+<dt><strong><a name="item_third_level%3a_the_keys_are_the_names_of_the_colum">Third level: The keys are the names of the columns.</a></strong><br />
+</dt>
+<dd>
+<pre>
+        my(@column_name) = sort keys %$columns;</pre>
+</dd>
+<dt><strong><a name="item_fourth_level%3a_column_attributes">Fourth level: Column attributes</a></strong><br />
+</dt>
+<dd>
+<pre>
+        for $column_name (@column_name)
+        {
+            while ( ($name, $value) = each(%{$columns{$column_name} }) )
+            {
+                    Use...
+            }
+        }</pre>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="method:_tables()">Method: <code>tables()</code></a></h1>
+<p>Returns an array ref of table names.</p>
+<p>They are sorted by name.</p>
+<p>
+</p>
+<hr />
+<h1><a name="example_code">Example code</a></h1>
+<p>See the examples/ directory in the distro.</p>
+<p>There are 2 demo programs:</p>
+<dl>
+<dt><strong><a name="item_test%2dadmin%2dinfo%2ecgi">test-admin-info.cgi</a></strong><br />
+</dt>
+<dd>
+It outputs all possible info in HTML.
+</dd>
+<p></p>
+<dt><strong><a name="item_test%2dadmin%2dinfo%2epl">test-admin-info.pl</a></strong><br />
+</dt>
+<dd>
+It outputs all possible info in text.
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="related_modules">Related Modules</a></h1>
+<p>I have written a set of modules - which are still being tested - under the DBIx::Admin::* namespace.</p>
+<p>These will be released shortly, but the first release will only be for demonstration purposes.</p>
+<p>They are based around the Model-View-Controller pattern.</p>
+<p>DBIx::Admin is the Controller, DBIx::Admin::Model is the Model, and yes, DBIx::Admin::View is the Viewer.</p>
+<p>They will form the core of myadmin.cgi V 2. See <a href="http://savage.net.au/Perl-tutorials.html#tut_35">http://savage.net.au/Perl-tutorials.html#tut_35</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="required_modules">Required Modules</a></h1>
+<p>Carp.</p>
+<p>
+</p>
+<hr />
+<h1><a name="changes">Changes</a></h1>
+<p>See Changes.txt.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">Author</a></h1>
+<p><code>DBIx::Admin::TableInfo</code> was written by Ron Savage <em>&lt;<a href="mailto:ron@savage.net.au">ron@savage.net.au</a>&gt;</em> in 2004.</p>
+<p>Home page: <a href="http://savage.net.au/index.html">http://savage.net.au/index.html</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">Copyright</a></h1>
+<p>Australian copyright (c) 2004, Ron Savage. All rights reserved.</p>
+<pre>
+        All Programs of mine are 'OSI Certified Open Source Software';
+        you can redistribute them and/or modify them under the terms of
+        The Artistic License, a copy of which is available at:
+        <a href="http://www.opensource.org/licenses/index.html">http://www.opensource.org/licenses/index.html</a></pre>
+
+</body>
+
+</html>

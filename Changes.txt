@@ -1,0 +1,4 @@
+Revision history for Perl extension DBIx::Admin::TableInfo.
+
+1.00  Tue Jan 21 12:37:29 2004
+	- Original version
