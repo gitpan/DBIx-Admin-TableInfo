@@ -1,9 +1,9 @@
-MANIFEST
-TableInfo.pm
+Build.PL
 Changes.txt
-Makefile.PL
-TableInfo.html
+examples/test-table-info.cgi
+examples/test-table-info.pl
+lib/DBIx/Admin/TableInfo.pm
+MANIFEST			This list of files
+META.yml
 README
 t/test.t
-examples/test-table-info.pl
-examples/test-table-info.cgi

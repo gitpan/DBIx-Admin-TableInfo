@@ -1,0 +1,13 @@
+--- #YAML:1.0
+name: DBIx-Admin-TableInfo
+version: 1.01
+author:
+  - Ron Savage <ron@savage.net.au>
+abstract: |-
+  A wrapper around DBI's table_info() and column_info()
+license: artistic
+requires:
+  Carp: 0
+  DBI: 0
+provides: {}
+generated_by: Module::Build version 0.24

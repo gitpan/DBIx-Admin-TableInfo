@@ -56,7 +56,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 
 );
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 # -----------------------------------------------
 
@@ -193,6 +193,16 @@ sub new
 	return $self;
 
 }	# End of new.
+
+# -----------------------------------------------
+
+sub refresh
+{
+	my($self) = @_;
+
+	$self -> _info();
+
+}	# End of refresh.
 
 # -----------------------------------------------
 

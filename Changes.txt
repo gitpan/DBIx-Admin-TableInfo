@@ -1,4 +1,9 @@
 Revision history for Perl extension DBIx::Admin::TableInfo.
 
+1.01  Wed Mar  3 10:08:41 2004
+	- Add method refresh() to re-create internal data by re-calling DBI's table_info().
+		This has to be called after you change the database structure, eg by doing
+		'drop table <some table>' or something similar
+
 1.00  Tue Jan 21 12:37:29 2004
 	- Original version

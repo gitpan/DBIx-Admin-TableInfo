@@ -1,223 +1,45 @@
-NAME
-    "DBIx::Admin::TableInfo" - A wrapper around DBI's table_info() and
-    column_info()
+README file for DBIx::Admin::TableInfo.
 
-Synopsis
-            use DBIx::Admin::TableInfo;
+Warning: WinZip 8.1 and 9.0 both contain an 'accidental' bug which stops
+them recognizing the directory structures of some valid *.tar files.
+You are better off using a reliable tool such as InfoZip:
+ftp://ftp.info-zip.org/pub/infozip/
 
-            my($dbh) = DBI -> connect
-            (
-                'DBI:mysql:mids:127.0.0.1', 'root', 'pass',
-                {
-                    AutoCommit         => 1,
-                    PrintError         => 0,
-                    RaiseError         => 1,
-                    ShowErrorStatement => 1,
-                }
-            );
-            my($admin) = DBIx::Admin::TableInfo -> new(dbh => $dbh);
-            my($info)  = $admin -> info();
+1 Installing from a Unix-like distro
+------------------------------------
+shell>gunzip DBIx-Admin-TableInfo-1.00.tgz
+shell>tar mxvf DBIx-Admin-TableInfo-1.00.tar
 
-            for my $table_name (@{$admin -> tables()})
-            {
-                print "Table: $table_name\n";
-                print "Table attributes\n";
+On Unix-like systems:
 
-                for (sort keys %{$$info{$table_name}{'attributes'} })
-                {
-                    print "$_: $$info{$table_name}{'attributes'}{$_}\n";
-                }
+shell>perl Build.PL
+shell>./Build
+shell>./Build test
+shell>./Build install
 
-                print "\n";
+On MS Windows-like systems:
 
-                for my $column_name (@{$admin -> columns($table_name)})
-                {
-                    print "Column: $column_name\n";
-                    print "Column attributes\n";
+shell>perl Build.PL
+shell>perl Build
+shell>perl Build test
+shell>perl Build install
 
-                    for (sort keys %{$$info{$table_name}{'columns'}{$column_name} })
-                    {
-                        print "$_: $$info{$table_name}{'columns'}{$column_name}{$_}\n";
-                    }
+On all systems:
 
-                    print "\n";
-                }
+Run TableInfo.pm through you favourite pod2html translator.
 
-                print "\n";
-            }
+If you are using fancy-pom2.pl, with its 'default.css' file installed in
+/apache2/htdocs/css/, you'd do:
 
-Description
-    "DBIx::Admin::TableInfo" is a pure Perl module.
+	shell>perl fancy-pom2.pl html -css TableInfo.pm > /apache2/htdocs/TableInfo.html
 
-    It is a wrapper around the DBI methods table_info() and column_info().
+	or perhaps something like:
 
-Distributions
-    This module is available both as a Unix-style distro (*.tgz) and an
-    ActiveState-style distro (*.ppd). The latter is shipped in a *.zip file.
+	shell>perl fancy-pom2.pl html -css TableInfo.pm > /perl/html/site/lib/DBIx/Admin/TableInfo.html
 
-    See http://savage.net.au/Perl-modules.html for details.
-
-    See http://savage.net.au/Perl-modules/html/installing-a-module.html for
-    help on unpacking and installing each type of distro.
-
-Constructor and initialization
-    new(...) returns a "DBIx::Admin::TableInfo" object.
-
-    This is the class's contructor.
-
-    Usage: DBIx::Admin::TableInfo -> new().
-
-    This method takes a set of parameters. Only the dbh parameter is
-    mandatory.
-
-    For each parameter you wish to use, call new as new(param_1 => value_1,
-    ...).
-
-    column_catalog
-        This is the value passed in as the catalog parameter to
-        column_info(catalog, schema...).
-
-        The default value is undef.
-
-        undef was chosen because it given the best results with MySQL. The
-        MySQL driver DBD::mysql V 2.9002 has a bug in it, in that it aborts
-        if an empty string is used here, even though an empty string is used
-        for the catalog parameter to table_info().
-
-        This parameter is optional.
-
-    column_schema
-        This is the value passed in as the schema parameter to
-        column_info(catalog, schema...).
-
-        The default value is undef.
-
-        See above for comments about undef.
-
-        This parameter is optional.
-
-    dbh This is a database handle.
-
-        This parameter is mandatory.
-
-    table_catalog
-        This is the value passed in as the catalog parameter to
-        table_info(catalog, schema...).
-
-        The default value is '' (the empty string).
-
-        See above for comments about empty strings.
-
-        This parameter is optional.
-
-    table_schema
-        This is the value passed in as the schema parameter to
-        table_info(catalog, schema...).
-
-        The default value is '' (the empty string).
-
-        See above for comments about empty strings.
-
-        This parameter is optional.
-
-Method: columns($table_name, $by_position)
-    Returns an array ref of column names.
-
-    By default they are sorted by name.
-
-    However, if you pass in a true value for $by_position, they are sorted
-    by the column attribute ORDINAL_POSITION.
-
-Method: info()
-    Returns a hash ref of all available data.
-
-    The structure of this hash is described next:
-
-    First level: The keys are the names of the tables
-                my($info)       = $obj -> info();
-                my(@table_name) = sort keys %$info;
-
-        I use singular names for my arrays, hence @table_name rather than
-        @table_names.
-
-    Second level: The keys are 'attributes' and 'columns'
-                my($table_attributes) = $$info{$table_name}{'attributes'};
-
-        This is a hash ref of the table's attributes.
-
-                my($columns) = $$info{$table_name}{'columns'};
-
-        This is a hash ref of the table's columns.
-
-    Third level: Table attributes
-                while ( ($name, $value) = each(%$table_attributes) )
-                {
-                        Use...
-                }
-
-        For the attributes of the tables, there are no more levels in the
-        hash ref.
-
-    Third level: The keys are the names of the columns.
-                my(@column_name) = sort keys %$columns;
-
-    Fourth level: Column attributes
-                for $column_name (@column_name)
-                {
-                    while ( ($name, $value) = each(%{$columns{$column_name} }) )
-                    {
-                            Use...
-                    }
-                }
-
-Method: tables()
-    Returns an array ref of table names.
-
-    They are sorted by name.
-
-Example code
-    See the examples/ directory in the distro.
-
-    There are 2 demo programs:
-
-    test-admin-info.cgi
-        It outputs all possible info in HTML.
-
-    test-admin-info.pl
-        It outputs all possible info in text.
-
-Related Modules
-    I have written a set of modules - which are still being tested - under
-    the DBIx::Admin::* namespace.
-
-    These will be released shortly, but the first release will only be for
-    demonstration purposes.
-
-    They are based around the Model-View-Controller pattern.
-
-    DBIx::Admin is the Controller, DBIx::Admin::Model is the Model, and yes,
-    DBIx::Admin::View is the Viewer.
-
-    They will form the core of myadmin.cgi V 2. See
-    http://savage.net.au/Perl-tutorials.html#tut_35
-
-Required Modules
-    Carp.
-
-Changes
-    See Changes.txt.
-
-Author
-    "DBIx::Admin::TableInfo" was written by Ron Savage *<ron@savage.net.au>*
-    in 2004.
-
-    Home page: http://savage.net.au/index.html
-
-Copyright
-    Australian copyright (c) 2004, Ron Savage. All rights reserved.
-
-            All Programs of mine are 'OSI Certified Open Source Software';
-            you can redistribute them and/or modify them under the terms of
-            The Artistic License, a copy of which is available at:
-            http://www.opensource.org/licenses/index.html
-
+2 Installing from an ActiveState distro
+---------------------------------------
+shell>unzip DBIx-Admin-TableInfo-1.00.zip
+shell>ppm install --location=. DBIx-Admin-TableInfo
+shell>del DBIx-Admin-TableInfo-1.00.ppd
+shell>del PPM-DBIx-Admin-TableInfo-1.00.tar.gz
