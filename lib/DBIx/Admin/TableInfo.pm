@@ -56,7 +56,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 
 );
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 # -----------------------------------------------
 
@@ -431,17 +431,29 @@ It outputs all possible info in text.
 
 =back
 
+=head1 Tested Database Formats
+
+I have used the program in the synopsis to read databases in these formats:
+
+=over 4
+
+=item MySQL V 4.0
+
+=item MS Access V 2
+
+Yes, some businesses are still running V 2 as of July, 2004.
+
+=item MS Access V 2002
+
+=back
+
+It's important to note that in each case the only parameter that needed to be passed to C<new()> was dbh.
+
 =head1 Related Modules
 
 I have written a set of modules - which are still being tested - under the DBIx::Admin::* namespace.
 
-These will be released shortly, but the first release will only be for demonstration purposes.
-
-They are based around the Model-View-Controller pattern.
-
-DBIx::Admin is the Controller, DBIx::Admin::Model is the Model, and yes, DBIx::Admin::View is the Viewer.
-
-They will form the core of myadmin.cgi V 2. See http://savage.net.au/Perl-tutorials.html#tut_35
+They will form the core of myadmin.cgi V 2. See http://savage.net.au/Perl-tutorials.html#tut_41
 
 =head1 Required Modules
 
