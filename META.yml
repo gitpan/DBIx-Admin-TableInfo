@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: DBIx-Admin-TableInfo
-version: 1.02
+version: 1.03
 author:
   - Ron Savage <ron@savage.net.au>
 abstract: |-
@@ -12,5 +12,8 @@ requires:
 build_requires:
   Test::More: 0
   Test::Pod: 0
-provides: {}
-generated_by: Module::Build version 0.24
+provides:
+  DBIx::Admin::TableInfo:
+    file: lib/DBIx/Admin/TableInfo.pm
+    version: 1.03
+generated_by: Module::Build version 0.2611
