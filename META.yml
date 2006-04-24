@@ -1,10 +1,9 @@
---- #YAML:1.0
+---
 name: DBIx-Admin-TableInfo
-version: 1.03
+version: 2.00
 author:
-  - Ron Savage <ron@savage.net.au>
-abstract: |-
-  A wrapper around DBI's table_info() and column_info()
+  - 'Ron Savage <ron@savage.net.au>'
+abstract: 'A wrapper for table_info(), column_info(), *_key_info()'
 license: artistic
 requires:
   Carp: 0
@@ -15,5 +14,5 @@ build_requires:
 provides:
   DBIx::Admin::TableInfo:
     file: lib/DBIx/Admin/TableInfo.pm
-    version: 1.03
+    version: 2.00
 generated_by: Module::Build version 0.2611
