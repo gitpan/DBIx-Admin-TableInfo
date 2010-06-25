@@ -16,10 +16,10 @@ name: DBIx-Admin-TableInfo
 provides:
   DBIx::Admin::TableInfo:
     file: lib/DBIx/Admin/TableInfo.pm
-    version: 2.04
+    version: 2.05
 requires:
   Carp: 0
   DBI: 0
 resources:
   license: http://www.perlfoundation.org/artistic_license_1_0
-version: 2.04
+version: 2.05
