@@ -21,13 +21,17 @@ WriteMakefile
 	},
 	DISTNAME		=> 'DBIx-Admin-TableInfo',
 	NAME			=> 'DBIx::Admin::TableInfo',
+	LICENSE   => 'artistic_2',
 	PL_FILES		=> {},
 	PREREQ_PM		=>
 	{
-		Carp		=> 0,
-		DBI			=> 0,
-		Test::More	=> 0,
-		Test::Pod	=> 0,
+		Data::Dumper::Concise => 2.020,
+		DBI                   => 0,
+		Hash::FieldHash       => 0.12,
+		strict                => 0,
+		Test::More	          => 0,
+#		Test::Pod	          => 1.45, # Make it optional. See t/pod.t
+		warnings              => 0,
 	},
 	VERSION_FROM	=> 'lib/DBIx/Admin/TableInfo.pm',
 );
