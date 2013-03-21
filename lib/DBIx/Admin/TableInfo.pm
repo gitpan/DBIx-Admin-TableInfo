@@ -13,7 +13,7 @@ fieldhash my %schema  => 'schema';
 fieldhash my %table   => 'table';
 fieldhash my %type    => 'type';
 
-our $VERSION = '2.08';
+our $VERSION = '2.09';
 
 # -----------------------------------------------
 
@@ -258,6 +258,13 @@ This program is shipped as examples/table.info.pl.
 
 See docs/contacts.*.log for sample output. The input to these runs is the database created by the module
 L<App::Office::Contacts>, with its config file first set for Postgres and then for SQLite.
+
+If the environment vaiables DBI_DSN, DBI_USER and DBI_PASS are set (the latter 2 are optional [e.g. for SQLite),
+then this demonstrates extracting a lot of information from a database schema.
+
+Also, for Postgres, you can set DBI_SCHEMA to a list of schemas, e.g. when processing the MusicBrainz database.
+
+For details, see L<http://blogs.perl.org/users/ron_savage/2013/03/graphviz2-and-the-dread-musicbrainz-db.html>.
 
 =head1 Description
 
