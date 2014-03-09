@@ -2,18 +2,66 @@ package DBIx::Admin::TableInfo;
 
 use strict;
 use warnings;
-no warnings 'redefine';
 
-use Hash::FieldHash ':all';
+use Data::Dumper::Concise; # Form Dumper().
 
-fieldhash my %catalog => 'catalog';
-fieldhash my %dbh     => 'dbh';
-fieldhash my %info    => 'info';
-fieldhash my %schema  => 'schema';
-fieldhash my %table   => 'table';
-fieldhash my %type    => 'type';
+use Moo;
 
-our $VERSION = '2.09';
+has catalog =>
+(
+	is       => 'rw',
+	default  => sub{return undef},
+	required => 0,
+);
+
+has dbh =>
+(
+	is       => 'rw',
+	isa      => sub{die "The 'dbh' parameter to new() is mandatory\n" if (! $_[0])},
+	default  => sub{return ''},
+	required => 1,
+);
+
+has info =>
+(
+	is       => 'rw',
+	default  => sub{return {} },
+	required => 0,
+);
+
+has schema =>
+(
+	is       => 'rw',
+	default  => sub{return undef}, # See BUILD().
+	required => 0,
+);
+
+has table =>
+(
+	is       => 'rw',
+	default  => sub{return '%'},
+	required => 0,
+);
+
+has type =>
+(
+	is       => 'rw',
+	default  => sub{return 'TABLE'},
+	required => 0,
+);
+
+our $VERSION = '2.10';
+
+# -----------------------------------------------
+
+sub BUILD
+{
+	my($self) = @_;
+
+	$self -> schema(dbh2schema($self -> dbh) ) if (! defined $self -> schema);
+	$self -> _info;
+
+} # End of BUILD.
 
 # -----------------------------------------------
 
@@ -32,6 +80,25 @@ sub columns
 	}
 
 }	# End of columns.
+
+# -----------------------------------------------
+# Warning: This is a function, not a method.
+
+sub dbh2schema
+{
+	my($dbh)    = @_;
+	my($vendor) = uc $dbh -> get_info(17); # SQL_DBMS_NAME.
+	my(%schema) =
+	(
+		MYSQL      => undef,
+		ORACLE     => uc $$dbh{Username},
+		POSTGRESQL => 'public',
+		SQLITE     => 'main',
+	);
+
+	return $schema{$vendor};
+
+} # End of dbh2schema.
 
 # -----------------------------------------------
 
@@ -147,9 +214,17 @@ sub _info
 			{
 				$table_sth = $self -> dbh -> foreign_key_info($self -> catalog, $self -> schema, $table_name, $self -> catalog, $self -> schema, $foreign_table) || next;
 
-				for $column_data (@{$table_sth -> fetchall_arrayref({})})
+				if ($vendor eq 'MySQL')
 				{
-					$$info{$table_name}{foreign_keys}{$foreign_table} = {%$column_data};
+					my($hashref) = $table_sth->fetchall_hashref(['PKTABLE_NAME']);
+					$$info{$table_name}{foreign_keys}{$foreign_table} = $$hashref{$table_name} if ($$hashref{$table_name});
+				}
+				else
+				{
+					for $column_data (@{$table_sth -> fetchall_arrayref({})})
+					{
+						$$info{$table_name}{foreign_keys}{$foreign_table} = {%$column_data};
+					}
 				}
 			}
 		}
@@ -158,39 +233,6 @@ sub _info
 	$self -> info($info);
 
 }	# End of _info.
-
-# -----------------------------------------------
-
-sub _init
-{
-	my($self, $arg) = @_;
-	$$arg{catalog}  ||= undef;   # Caller can set.
-	$$arg{dbh}      ||= '';      # Caller can set.
-	$$arg{info}     = {};
-	$$arg{schema}   ||= undef;   # Caller can set.
-	$$arg{table}    ||= '%';     # Caller can set.
-	$$arg{type}     ||= 'TABLE'; # Caller can set.
-	$self           = from_hash($self, $arg);
-
-	die "The 'dbh' parameter to new() is mandatory\n" if (! $self -> dbh);
-
-	return $self;
-
-} # End of _init.
-
-# -----------------------------------------------
-
-sub new
-{
-	my($class, %arg) = @_;
-	my($self)        = bless {}, $class;
-	$self            = $self -> _init(\%arg);
-
-	$self -> _info;
-
-	return $self;
-
-}	# End of new.
 
 # -----------------------------------------------
 
@@ -226,8 +268,6 @@ DBIx::Admin::TableInfo - A wrapper for all of table_info(), column_info(), *_key
 
 =head1 Synopsis
 
-This program is shipped as examples/table.info.pl.
-
 	#!/usr/bin/env perl
 
 	use strict;
@@ -235,7 +275,7 @@ This program is shipped as examples/table.info.pl.
 
 	use Data::Dumper::Concise;
 	use DBI;
-	use DBIx::Admin::TableInfo 2.08;
+	use DBIx::Admin::TableInfo 2.10;
 
 	# ---------------------
 
@@ -243,21 +283,9 @@ This program is shipped as examples/table.info.pl.
 	$$attr{sqlite_unicode} = 1 if ($ENV{DBI_DSN} =~ /SQLite/i);
 	my($dbh)               = DBI -> connect($ENV{DBI_DSN}, $ENV{DBI_USER}, $ENV{DBI_PASS}, $attr);
 
-	$dbh -> do('PRAGMA foreign_keys = ON') if ($ENV{DBI_DSN} =~ /SQLite/i);
+	$dbh -> do('pragma foreign_keys = on') if ($ENV{DBI_DSN} =~ /SQLite/i);
 
-	my($schema) = $ENV{DBI_DSN} =~ /^dbi:Oracle/i
-		? uc $ENV{DBI_USER}
-		: $ENV{DBI_DSN} =~ /^dbi:Pg/i
-		? 'public'
-		: undef;
-
-	print Data::Dumper -> Dump
-	([
-		DBIx::Admin::TableInfo -> new(dbh => $dbh, schema => $schema) -> info()
-	]);
-
-See docs/contacts.*.log for sample output. The input to these runs is the database created by the module
-L<App::Office::Contacts>, with its config file first set for Postgres and then for SQLite.
+	print Dumper(DBIx::Admin::TableInfo -> new(dbh => $dbh) -> info() );
 
 If the environment vaiables DBI_DSN, DBI_USER and DBI_PASS are set (the latter 2 are optional [e.g. for SQLite),
 then this demonstrates extracting a lot of information from a database schema.
@@ -265,6 +293,8 @@ then this demonstrates extracting a lot of information from a database schema.
 Also, for Postgres, you can set DBI_SCHEMA to a list of schemas, e.g. when processing the MusicBrainz database.
 
 For details, see L<http://blogs.perl.org/users/ron_savage/2013/03/graphviz2-and-the-dread-musicbrainz-db.html>.
+
+See also xt/author/mysql.fk.pl and xt/author/fk.t.
 
 =head1 Description
 
@@ -426,6 +456,8 @@ Note: If you are using Oracle, call C<new()> with schema set to uc $user_name.
 
 Note: If you are using Postgres, call C<new()> with schema set to 'public'.
 
+Note: If you are using SQLite, call C<new()> with schema set to 'main'.
+
 This parameter is optional.
 
 =item o table
@@ -451,7 +483,9 @@ This parameter is optional.
 
 =back
 
-=head1 Method: columns($table_name, $by_position)
+=head1 Methods
+
+=head2 columns($table_name, $by_position)
 
 Returns an array ref of column names.
 
@@ -459,7 +493,27 @@ By default they are sorted by name.
 
 However, if you pass in a true value for $by_position, they are sorted by the column attribute ORDINAL_POSITION. This is Postgres-specific.
 
-=head1 Method: info()
+=head2 dbh2schema($dbh)
+
+Warning: This is a function, not a method. It is called like this:
+
+	my($schema) = DBIx::Admin::TableInfo::dbh2schema($dbh);
+
+The code is just:
+
+	my($dbh)    = @_;
+	my($vendor) = uc $dbh -> get_info(17); # SQL_DBMS_NAME.
+	my(%schema) =
+	(
+		MYSQL      => undef,
+		ORACLE     => uc $$dbh{Username},
+		POSTGRESQL => 'public',
+		SQLITE     => 'main',
+	);
+
+	return $schema{$vendor};
+
+=head2 info()
 
 Returns a hash ref of all available data.
 
@@ -568,14 +622,14 @@ These columns make up the primary key of the current table.
 
 =back
 
-=head1 Method: refresh()
+=head2 refresh()
 
 Returns the same hash ref as info().
 
 Use this after changing the database schema, when you want this module to re-interrogate
 the database server.
 
-=head1 Method: tables()
+=head2 tables()
 
 Returns an array ref of table names.
 
@@ -635,9 +689,13 @@ Here are tested parameter values for various database vendors:
 
 =item o SQLite
 
-	my($admin) = DBIx::Admin::TableInfo -> new(dbh => $dbh);
+	my($admin) = DBIx::Admin::TableInfo -> new
+	(
+		dbh    => $dbh,
+		schema => 'main',
+	);
 
-	In other words, the default values for catalog, schema, table and type will Just Work.
+	In other words, the default values for catalog, table and type will Just Work.
 
 	See the FAQ for which tables are ignored under SQLite.
 
@@ -645,41 +703,22 @@ Here are tested parameter values for various database vendors:
 
 See the examples/ directory in the distro.
 
-=head1 Tested Database Formats
-
-The first set of tests was done with C<DBIx::Admin::TableInfo> up to V 2.03,
-using examples/table.info.pl (as per the Synopsis):
-
-=over 4
-
-=item o MS Access V 2
-
-Yes, some businesses were still running V 2 as of July, 2004.
-
-=item o MS Access V 2002 and V 2003
-
-=item o MySQL V 4 and V 5
-
-=item o Oracle V 9.2.0
-
-=item o PostgreSQL V 7.3, 8.1
-
-=back
-
-The second set of tests was done with C<DBIx::Admin::TableInfo> V 2.04, also using
-examples/table.info.pl.
-
-=over 4
-
-=item o MySql V 5.0.51a and DBD::mysql V 4.014
-
-=item o Postgres V 08.03.1100 and DBD::Pg V 2.17.1.
-
-=item o SQLite V 3.6.22 and DBD::SQLite V 1.29.
-
-=back
-
 =head1 FAQ
+
+=head2 Which versions of the servers did you test?
+
+	Versions as at 2014-03-07
+	+----------|------------+
+	|  Vendor  |     V      |
+	+----------|------------+
+	|  MariaDB |   5.5.36   |
+	+----------|------------+
+	|  Oracle  | 10.2.0.1.0 | (Not tested for years)
+	+----------|------------+
+	| Postgres |   9.1.12   |
+	+----------|------------+
+	|  SQLite  |   3.7.17   |
+	+----------|------------+
 
 =head2 Which tables are ignored for which databases?
 
@@ -688,6 +727,91 @@ Here is the code which skips some tables:
 	next if ( ($vendor eq 'ORACLE')     && ($table_name =~ /^BIN\$.+\$./) );
 	next if ( ($vendor eq 'POSTGRESQL') && ($table_name =~ /^(?:pg_|sql_)/) );
 	next if ( ($vendor eq 'SQLITE')     && ($table_name eq 'sqlite_sequence') );
+
+=head2 How do I identify foreign keys?
+
+See L<DBIx::Admin::CreateTable/FAQ> for database server-specific create statements to activate foreign keys.
+
+Then try:
+
+	my($info) = DBIx::Admin::TableInfo -> new(dbh => $dbh) -> info;
+
+	print Data::Dumper::Concise::Dumper($$info{one}{foreign_keys}), "\n";
+
+Output follows. Each is a hashref with the keys being the names of tables (in this case 'two') pointing to table 'one'.
+
+But beware slightly differing spellings depending on the database server. This is documented in
+L<https://metacpan.org/pod/DBI#foreign_key_info>. Look closely at the usage of the '_' character.
+
+=over 4
+
+=item o MySQL
+
+	two => {
+		DEFERABILITY => undef,
+		DELETE_RULE => undef,
+		FKCOLUMN_NAME => "one_id",
+		FKTABLE_CAT => "def",
+		FKTABLE_NAME => "two",
+		FKTABLE_SCHEM => "testdb",
+		FK_NAME => "two_ibfk_1",
+		KEY_SEQ => 1,
+		PKCOLUMN_NAME => "id",
+		PKTABLE_CAT => undef,
+		PKTABLE_NAME => "one",
+		PKTABLE_SCHEM => "testdb",
+		PK_NAME => undef,
+		UNIQUE_OR_PRIMARY => undef,
+		UPDATE_RULE => undef
+	}
+
+=item o Postgres
+
+	two => {
+		DEFERABILITY => 7,
+		DELETE_RULE => 3,
+		FK_COLUMN_NAME => "one_id",
+		FK_DATA_TYPE => "int4",
+		FK_NAME => "two_one_id_fkey",
+		FK_TABLE_CAT => undef,
+		FK_TABLE_NAME => "two",
+		FK_TABLE_SCHEM => "public",
+		ORDINAL_POSITION => 1,
+		UK_COLUMN_NAME => "id",
+		UK_DATA_TYPE => "int4",
+		UK_NAME => "one_pkey",
+		UK_TABLE_CAT => undef,
+		UK_TABLE_NAME => "one",
+		UK_TABLE_SCHEM => "public",
+		UNIQUE_OR_PRIMARY => "PRIMARY",
+		UPDATE_RULE => 3
+	}
+
+=item o SQLite
+
+	two => {
+		DEFERABILITY => undef,
+		DELETE_RULE => 3,
+		FK_COLUMN_NAME => "one_id",
+		FK_DATA_TYPE => undef,
+		FK_NAME => undef,
+		FK_TABLE_CAT => undef,
+		FK_TABLE_NAME => "two",
+		FK_TABLE_SCHEM => undef,
+		ORDINAL_POSITION => 0,
+		UK_COLUMN_NAME => "id",
+		UK_DATA_TYPE => undef,
+		UK_NAME => undef,
+		UK_TABLE_CAT => undef,
+		UK_TABLE_NAME => "one",
+		UK_TABLE_SCHEM => undef,
+		UNIQUE_OR_PRIMARY => undef,
+		UPDATE_RULE => 3
+	}
+
+=back
+
+You can also play with xt/author/fk.t and xt/author/dsn.ini (especially the 'active' option).
 
 =head2 Does DBIx::Admin::TableInfo work with SQLite databases?
 
@@ -819,6 +943,32 @@ This is saying that for the table 'visibilities', there is a foreign key in the 
 That foreign key is called 'visibility_id', and it points to the key called 'id' in the 'visibilities'
 table.
 
+=head2 How do I use schemas in Postgres?
+
+You may need to do something like this:
+
+	$dbh -> do("set search_path to $ENV{DBI_SCHEMA}") if ($ENV{DBI_SCHEMA});
+
+$ENV{DBI_SCHEMA} can be a comma-separated list, as in:
+
+	$dbh -> do("set search_path to my_schema, public");
+
+See L<DBD::Pg> for details.
+
+=head2 See Also
+
+L<DBIx::Admin::CreateTable>.
+
+L<DBIx::Admin::DSNManager>.
+
+=head1 Version Numbers
+
+Version numbers < 1.00 represent development versions. From 1.00 up, they are production versions.
+
+=head1 Support
+
+Log a bug on RT: L<https://rt.cpan.org/Public/Dist/Display.html?Name=DBIx-Admin-TableInfo>.
+
 =head1 Author
 
 C<DBIx::Admin::TableInfo> was written by Ron Savage I<E<lt>ron@savage.net.auE<gt>> in 2004.
@@ -828,6 +978,7 @@ Home page: http://savage.net.au/index.html
 =head1 Copyright
 
 Australian copyright (c) 2004, Ron Savage.
+
 	All Programs of mine are 'OSI Certified Open Source Software';
 	you can redistribute them and/or modify them under the terms of
 	The Artistic License, a copy of which is available at:
