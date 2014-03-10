@@ -4,6 +4,7 @@ author:
   - 'Ron Savage <ron@savage.net.au>'
 build_requires:
   Test::More: 0
+  Test::Version: 1.002003
 configure_requires:
   Module::Build: 0.38
 dynamic_config: 1
@@ -16,7 +17,7 @@ name: DBIx-Admin-TableInfo
 provides:
   DBIx::Admin::TableInfo:
     file: lib/DBIx/Admin/TableInfo.pm
-    version: 2.10
+    version: 2.11
 requires:
   DBI: 0
   Data::Dumper::Concise: 2.021
@@ -25,4 +26,4 @@ requires:
   warnings: 0
 resources:
   license: http://www.perlfoundation.org/artistic_license_2_0
-version: 2.10
+version: 2.11
